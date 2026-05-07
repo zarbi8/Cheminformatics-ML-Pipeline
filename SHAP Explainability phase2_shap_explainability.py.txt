@@ -1,0 +1,46 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import warnings
+from xgboost import XGBRegressor
+from rdkit import Chem
+from rdkit.Chem import Descriptors
+try:
+    import shap
+except ImportError:
+    raise ImportError("Please install shap using: pip install shap")
+
+warnings.filterwarnings('ignore')
+
+print("--- Phase 2: Explainable AI (XAI) using SHAP ---")
+
+def get_descriptors(smiles):
+    mol = Chem.MolFromSmiles(smiles)
+    if not mol: return None
+    return {
+        'MolWt': Descriptors.ExactMolWt(mol),
+        'LogP': Descriptors.MolLogP(mol),
+        'TPSA': Descriptors.TPSA(mol),
+        'NumAromaticRings': Descriptors.NumAromaticRings(mol),
+        'HeavyAtomCount': mol.GetNumHeavyAtoms()
+    }
+
+dummy_smiles = ["c1ccccc1", "Cc1ccccc1", "c1ccc2ccccc2c1", "c1ccncc1", "c1ccccc1O", "CCO", "CCN", "c1ccsc1"]
+X_list = [get_descriptors(smi) for smi in dummy_smiles]
+X = pd.DataFrame([x for x in X_list if x is not None])
+y = np.random.uniform(1.0, 3.0, len(X)) 
+
+print("Training Model for SHAP Analysis...")
+model = XGBRegressor(n_estimators=50, random_state=42)
+model.fit(X, y)
+
+print("Generating SHAP Values and Plots...")
+explainer = shap.TreeExplainer(model)
+shap_values = explainer.shap_values(X)
+
+plt.figure(figsize=(8, 6))
+shap.summary_plot(shap_values, X, show=False)
+plt.title("SHAP Feature Importance (Explainable AI)")
+plt.tight_layout()
+plt.savefig("phase2_shap_summary_plot.png", dpi=300)
+print("SHAP Plot saved as 'phase2_shap_summary_plot.png'.")

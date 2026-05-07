@@ -1,0 +1,33 @@
+import streamlit as st
+import pandas as pd
+from rdkit import Chem
+from rdkit.Chem import Descriptors, Draw
+
+st.set_page_config(page_title="OPV Discovery UI", layout="centered")
+
+st.title("🧪 Cheminformatics OPV Discovery App")
+st.write("An automated tool to analyze molecular structures and predict properties.")
+
+user_smiles = st.text_input("Enter SMILES string:", "c1ccsc1")
+
+if st.button("Analyze Molecule"):
+    mol = Chem.MolFromSmiles(user_smiles)
+    if mol:
+        st.success("Valid SMILES! Structure Generated.")
+        
+        img = Draw.MolToImage(mol, size=(300, 300))
+        st.image(img, caption=f"2D Structure of {user_smiles}", width=300)
+        
+        st.subheader("Molecular Descriptors")
+        features = {
+            "Molecular Weight": Descriptors.ExactMolWt(mol),
+            "LogP (Hydrophobicity)": Descriptors.MolLogP(mol),
+            "Topological Polar Surface Area (TPSA)": Descriptors.TPSA(mol)
+        }
+        st.table(pd.DataFrame(features.items(), columns=["Descriptor", "Value"]))
+        
+        st.subheader("AI Predictions (Simulated)")
+        st.metric(label="Predicted Bandgap (eV)", value="1.85 eV", delta="-0.15 eV from target")
+        
+    else:
+        st.error("Invalid SMILES! Please enter a correct chemical string.")

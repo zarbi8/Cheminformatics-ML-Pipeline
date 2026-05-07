@@ -1,0 +1,1 @@
+*.py.pycache/  *.py$$cod$$* $py.class venv/  env/  .env  *.png  Screened_Molecules_Structures/ *_plots.png DS_Store Thumbs.db
